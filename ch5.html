@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam for ch5</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .question {
+            display: none;
+        }
+        .question.active {
+            display: block;
+        }
+        label {
+            margin-top: 3px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #resultContainer {
+            margin-top: 20px;
+        }
+        .result {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #555;
+        }
+        .home-container {
+            text-align: center;
+        }
+        .slider-label {
+            display: block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="homeContainer" class="home-container">
+            <h1>ِChapte5 Exam</h1>
+            <label class="slider-label">Select number of T/F questions:</label>
+            <input type="range" id="tfCount" min="1" max="0" value="5" oninput="updateValue('tfCountValue', this.value)">
+            <span id="tfCountValue">1</span>
+            <br>
+            <label class="slider-label">Select number of Multiple Choice questions:</label>
+            <input type="range" id="mcCount" min="1" max="0" value="5" oninput="updateValue('mcCountValue', this.value)">
+            <span id="mcCountValue">1</span>
+            <br>
+            <button onclick="startExam()">Start the Exam</button>
+        </div>
+        <div id="questionsContainer"></div>
+        <button id="prevBtn" onclick="prevQuestion()" style="display: none;">Previous</button>
+        <button id="nextBtn" onclick="nextQuestion()" style="display: none;">Next</button>
+        <button id="submitBtn" onclick="submitExam()" style="display: none;">Submit</button>
+        <div id="resultContainer"></div>
+    </div>
+    <footer>Developed by Badr El sheshtawy</footer>
+
+    <script>
+      const questions =[
+
+  { "type": "tf", "question": "In ER to relational mapping, a composite attribute is included as a single attribute in the relation.", "answer": "F" },
+  { "type": "tf", "question": "In Step 1 of the ER to Relational Mapping Algorithm, each regular entity type is mapped to a relation with its simple attributes.", "answer": "T" },
+  { "type": "tf", "question": "A weak entity type's primary key is the combination of the primary key of the owner entity and the partial key of the weak entity.", "answer": "T" },
+  { "type": "tf", "question": "In Step 3, a binary 1:1 relationship requires creating a new relation to represent the relationship.", "answer": "F" },
+  { "type": "tf", "question": "For a binary 1:N relationship, the foreign key is placed in the relation representing the N-side entity.", "answer": "T" },
+  { "type": "tf", "question": "In Step 5, an M:N relationship is mapped by creating a new relation that includes foreign keys of both participating entity types.", "answer": "T" },
+  { "type": "tf", "question": "Multi-valued attributes are represented in a single relation with a composite key of the multi-valued attribute and the primary key of the related entity.", "answer": "T" },
+  { "type": "tf", "question": "In a binary 1:1 relationship, the foreign key can be placed in either of the two participating entity relations.", "answer": "T" },
+  { "type": "tf", "question": "The primary key of a relation representing an n-ary relationship type includes all foreign keys of the participating entity types.", "answer": "T" },
+  { "type": "tf", "question": "A regular binary 1:1 relationship is mapped by merging the two entity types and the relationship into a single relation.", "answer": "T" },
+  { "type": "tf", "question": "In Step 4, a foreign key in the N-side relation of a 1:N relationship is derived from the simple attributes of the relationship.", "answer": "F" },
+  { "type": "tf", "question": "Composite attributes in relational schema are broken down into their simple components.", "answer": "T" },
+  { "type": "tf", "question": "Weak entity types require the primary key of the owner entity type to be included as a foreign key in their relation.", "answer": "T" },
+  { "type": "tf", "question": "Mapping a binary 1:N relationship type involves including a foreign key in the relation representing the 1-side entity.", "answer": "F" },
+  { "type": "tf", "question": "In Step 6, a multi-valued attribute is handled by creating a new relation with the multi-valued attribute and the primary key of the related entity.", "answer": "T" },
+  { "type": "tf", "question": "The primary key of a relation for a regular binary M:N relationship type is formed by the combination of foreign keys from the participating entity types.", "answer": "T" },
+  { "type": "tf", "question": "For a unary relationship, the relation includes the primary key of the single entity involved.", "answer": "F" },
+  { "type": "tf", "question": "An associative entity represents a many-to-many relationship by creating a new relation with the primary keys of the participating entities.", "answer": "T" },
+  { "type": "tf", "question": "In Step 2, weak entity types do not require the inclusion of foreign keys from the owner entity type.", "answer": "F" },
+  { "type": "tf", "question": "For an n-ary relationship type with cardinality constraints, the primary key may exclude some foreign keys.", "answer": "T" },
+  { "type": "tf", "question": "A composite key is used to uniquely identify records using a single attribute.", "answer": "F" },
+  { "type": "tf", "question": "In Step 7, an n-ary relationship type is mapped by creating a new relation with foreign keys and attributes from the relationship type.", "answer": "T" },
+  { "type": "tf", "question": "In a binary 1:1 relationship type, the foreign key must be placed in both of the participating entity relations.", "answer": "F" },
+  { "type": "tf", "question": "A multi-valued attribute in a relational schema is represented by a separate relation with the attribute and foreign key.", "answer": "T" },
+  { "type": "tf", "question": "Step 5 of the mapping algorithm does not involve creating a new relation for M:N relationships.", "answer": "F" },
+  { "type": "tf", "question": "In Step 3, the simple attributes of a 1:1 relationship are included as attributes in the relation with the foreign key.", "answer": "T" },
+  { "type": "tf", "question": "A unary relationship in ER to relational mapping involves multiple entities.", "answer": "F" },
+  { "type": "tf", "question": "For a regular binary 1:N relationship, foreign keys are placed in the relation on the N-side.", "answer": "T" },
+  { "type": "tf", "question": "The primary key of a weak entity type includes only the partial key of the weak entity.", "answer": "F" },
+  { "type": "tf", "question": "In Step 1, a regular entity type with a composite key includes all simple attributes forming the key.", "answer": "T" },
+  { "type": "tf", "question": "A many-to-many relationship in relational design can be mapped using an associative entity.", "answer": "T" },
+  { "type": "tf", "question": "In Step 4, the foreign key for a 1:N relationship type is placed in the N-side relation.", "answer": "T" },
+  { "type": "tf", "question": "In ER to relational mapping, a composite attribute is handled by including all its components in the relation.", "answer": "T" },
+  { "type": "tf", "question": "In a 1:1 relationship, a foreign key must be included in both participating entity relations.", "answer": "F" },
+  { "type": "tf", "question": "An n-ary relationship is mapped by creating a new relation with all participating entity type foreign keys and attributes.", "answer": "T" },
+  { "type": "tf", "question": "In Step 6, multi-valued attributes are included as a composite attribute in the relation.", "answer": "F" },
+  { "type": "tf", "question": "The primary key of a relation representing a binary 1:N relationship includes the foreign key from the N-side relation.", "answer": "T" },
+  { "type": "tf", "question": "A weak entity type relation includes attributes of the weak entity and the primary key of the owner entity type.", "answer": "T" },
+  { "type": "tf", "question": "In Step 5, an M:N relationship type requires a new relation with the primary keys of both entity types involved.", "answer": "T" },
+  { "type": "tf", "question": "The primary key of an associative entity is formed by combining the primary keys of the participating entities.", "answer": "T" },
+  { "type": "tf", "question": "Step 3 requires creating a new relation for a binary 1:1 relationship type.", "answer": "F" },
+  { "type": "tf", "question": "In ER to relational mapping, multi-valued attributes are handled by creating a new relation with the attribute and its foreign key.", "answer": "T" },
+  { "type": "tf", "question": "A unary relationship involves mapping a relation with the primary key of a single entity.", "answer": "F" },
+  { "type": "tf", "question": "In Step 7, the primary key of an n-ary relationship type includes all foreign keys referencing the participating entity types.", "answer": "T" },
+  { "type": "tf", "question": "In Step 4, attributes of a 1:N relationship are included in the relation representing the N-side entity.", "answer": "T" },
+  { "type": "tf", "question": "For binary 1:1 relationships, a foreign key can be placed in either of the two participating entity relations.", "answer": "T" },
+  { "type": "tf", "question": "The primary key of a relation for an n-ary relationship type excludes foreign keys if cardinality constraints are 1.", "answer": "T" },
+  { "type": "tf", "question": "Composite attributes are included as separate simple attributes in the relation.", "answer": "T" },
+  { "type": "tf", "question": "A weak entity type's primary key consists of only its own partial key.", "answer": "F" },
+  { "type": "tf", "question": "For a regular binary 1:N relationship, the foreign key is placed in the N-side entity's relation.", "answer": "T" },
+  { "type": "tf", "question": "In Step 6, multi-valued attributes are represented directly within the primary relation.", "answer": "F" },
+  { "type": "tf", "question": "A new relation is created for M:N relationships, including foreign keys from both participating entities.", "answer": "T" },
+  {
+    type: 'mc',
+    question: 'What is the purpose of the ER to Relational Mapping Algorithm?',
+    options: ['A) To create physical database schemas from logical schemas', 'B) To map a conceptual schema into a relational database schema', 'C) To design user interfaces for databases', 'D) To optimize SQL queries'],
+    answer: 'B) To map a conceptual schema into a relational database schema'
+  },
+  {
+    type: 'mc',
+    question: 'Which of the following is a step in the ER to Relational Mapping Algorithm?',
+    options: ['A) Mapping composite attributes', 'B) Mapping multivalued attributes', 'C) Mapping hierarchical structures', 'D) Mapping network models'],
+    answer: 'B) Mapping multivalued attributes'
+  },
+  {
+    type: 'mc',
+    question: 'In the mapping of a regular (strong) entity type, what should be included in the relation R?',
+    options: ['A) All simple attributes of E', 'B) Only primary key attributes of E', 'C) Only composite attributes of E', 'D) Only foreign key attributes of E'],
+    answer: 'A) All simple attributes of E'
+  },
+  {
+    type: 'mc',
+    question: 'What is the primary key of the DEPENDENT relation in the context of a weak entity type mapping?',
+    options: ['A) DEPENDENT_NAME', 'B) ESSN', 'C) ESSN and DEPENDENT_NAME', 'D) DEPENDENT_NAME and RELATIONSHIP'],
+    answer: 'C) ESSN and DEPENDENT_NAME'
+  },
+  {
+    type: 'mc',
+    question: 'When mapping a binary 1:1 relationship type, which entity type should typically include the foreign key?',
+    options: ['A) The entity type with partial participation', 'B) The entity type with total participation', 'C) Either entity type', 'D) Both entity types'],
+    answer: 'B) The entity type with total participation'
+  },
+  {
+    type: 'mc',
+    question: 'How are binary M:N relationship types typically represented in a relational schema?',
+    options: ['A) By creating a new relation with the primary keys of the participating entities', 'B) By adding foreign keys to one of the existing relations', 'C) By creating a composite attribute', 'D) By merging the participating entities into a single relation'],
+    answer: 'A) By creating a new relation with the primary keys of the participating entities'
+  },
+  {
+    type: 'mc',
+    question: 'In the context of a multivalued attribute mapping, what does the primary key of the new relation include?',
+    options: ['A) Only the multivalued attribute', 'B) Only the primary key of the entity type', 'C) The multivalued attribute and the primary key of the entity type', 'D) The multivalued attribute and the foreign key'],
+    answer: 'C) The multivalued attribute and the primary key of the entity type'
+  },
+  {
+    type: 'mc',
+    question: 'What is a key characteristic of a weak entity type in the ER model?',
+    options: ['A) It has a composite primary key', 'B) It does not have a primary key', 'C) Its primary key is partially derived from its owner entity', 'D) It has no relationship with other entities'],
+    answer: 'C) Its primary key is partially derived from its owner entity'
+  },
+  {
+    type: 'mc',
+    question: 'What is the main difference between a regular entity type and a weak entity type?',
+    options: ['A) Regular entity types do not have primary keys', 'B) Weak entity types do not have attributes', 'C) Weak entity types depend on regular entity types for their identification', 'D) Regular entity types are not mapped to relations'],
+    answer: 'C) Weak entity types depend on regular entity types for their identification'
+  },
+  {
+    type: 'mc',
+    question: 'Which step in the ER to Relational Mapping Algorithm involves identifying the relations S and T?',
+    options: ['A) Mapping Regular (Strong) Entity Type', 'B) Mapping Weak Entity Type', 'C) Mapping Binary 1:1 Relationship Type', 'D) Mapping Binary M:N Relationship Type'],
+    answer: 'C) Mapping Binary 1:1 Relationship Type'
+  },
+  {
+    type: 'mc',
+    question: 'What is included as foreign key attributes in the new relation when mapping an n-ary relationship type?',
+    options: ['A) Only primary keys of the entity types', 'B) Primary keys and attributes of the relationship type', 'C) Only attributes of the relationship type', 'D) Simple attributes of the entity types'],
+    answer: 'B) Primary keys and attributes of the relationship type'
+  },
+  {
+    type: 'mc',
+    question: 'When mapping a binary 1:N relationship type, where is the foreign key placed?',
+    options: ['A) In the relation representing the entity type on the 1-side', 'B) In the relation representing the entity type on the N-side', 'C) In both relations', 'D) In a new relation'],
+    answer: 'B) In the relation representing the entity type on the N-side'
+  },
+  {
+    type: 'mc',
+    question: 'What is the relationship between an ER model entity type and a relational model relation?',
+    options: ['A) They are the same', 'B) An entity type is a subset of a relation', 'C) An entity type maps to a relation', 'D) A relation maps to an entity type'],
+    answer: 'C) An entity type maps to a relation'
+  },
+  {
+    type: 'mc',
+    question: 'What is the role of foreign keys in mapping relationship types?',
+    options: ['A) To enforce entity integrity', 'B) To define primary keys', 'C) To represent relationships between entities', 'D) To store multivalued attributes'],
+    answer: 'C) To represent relationships between entities'
+  },
+  {
+    type: 'mc',
+    question: 'What should be included in the relation R for a weak entity type W in the ER schema?',
+    options: ['A) Only the partial key of W', 'B) Only the attributes of W', 'C) The attributes of W and the primary key of the owner entity type', 'D) Only the primary key of the owner entity type'],
+    answer: 'C) The attributes of W and the primary key of the owner entity type'
+  },
+  {
+    type: 'mc',
+    question: 'Which attribute is included in the DEPARTMENT relation as a foreign key when mapping the MANAGES relationship type?',
+    options: ['A) DNUMBER', 'B) MGRSSN', 'C) DNAME', 'D) MGRSTARTDATE'],
+    answer: 'B) MGRSSN'
+  },
+  {
+    type: 'mc',
+    question: 'In the context of ER to relational mapping, what is the significance of the identifying relationship type?',
+    options: ['A) It defines the primary key of a regular entity type', 'B) It links weak entities to their owner entities', 'C) It specifies the attributes of a composite key', 'D) It determines the domain of attributes'],
+    answer: 'B) It links weak entities to their owner entities'
+  },
+  {
+    type: 'mc',
+    question: 'Which step involves mapping the primary key attribute(s) of the owner entity type(s) to the weak entity type relation?',
+    options: ['A) Step 1: Mapping Regular Entity Type', 'B) Step 2: Mapping Weak Entity Type', 'C) Step 3: Mapping Binary 1:1 Relationship Type', 'D) Step 4: Mapping Binary 1:N Relationship Type'],
+    answer: 'B) Step 2: Mapping Weak Entity Type'
+  },
+  {
+    type: 'mc',
+    question: 'When mapping a regular binary 1:N relationship type, which relation includes the foreign key?',
+    options: ['A) The relation representing the entity type on the 1-side', 'B) The relation representing the entity type on the N-side', 'C) Both relations', 'D) Neither relation'],
+    answer: 'B) The relation representing the entity type on the N-side'
+  },
+  {
+    type: 'mc',
+    question: 'In the context of ER to relational mapping, what is the role of a composite attribute?',
+    options: ['A) It is mapped as a single attribute in the relation', 'B) It is split into simple component attributes', 'C) It is ignored in the mapping process', 'D) It is used as a foreign key'],
+    answer: 'B) It is split into simple component attributes'
+  },
+  {
+    type: 'mc',
+    question: 'How are multivalued attributes handled in the ER to relational mapping process?',
+    options: ['A) They are included in the original relation', 'B) They are ignored', 'C) A new relation is created to represent them', 'D) They are converted into composite attributes'],
+    answer: 'C) A new relation is created to represent them'
+  },
+  {
+    type: 'mc',
+    question: 'Which type of relationship is represented by creating a new relation and including foreign keys of the participating entity types?',
+    options: ['A) 1:1 relationship', 'B) 1:N relationship', 'C) M:N relationship', 'D) Unary relationship'],
+    answer: 'C) M:N relationship'
+  },
+  {
+    type: 'mc',
+    question: 'What is the purpose of a relationship type in ER to relational mapping?',
+    options: ['A) To define a constraint between entities', 'B) To create an additional relation', 'C) To map attributes of entities', 'D) To specify the data types of attributes'],
+    answer: 'B) To create an additional relation'
+  },
+  {
+    type: 'mc',
+    question: 'What should be done when mapping a weak entity type with a composite primary key?',
+    options: ['A) The entire composite key is included in the relation', 'B) Only the partial key is included in the relation', 'C) Only the attributes of the weak entity type are included', 'D) The composite key is replaced by a surrogate key'],
+    answer: 'A) The entire composite key is included in the relation'
+  },
+  {
+    type: 'mc',
+    question: 'In the context of ER to relational mapping, what is a surrogate key?',
+    options: ['A) A key derived from the original primary key', 'B) A key that replaces a natural key', 'C) A key used to enforce referential integrity', 'D) A composite key consisting of multiple attributes'],
+    answer: 'B) A key that replaces a natural key'
+  },
+  {
+    type: 'mc',
+    question: 'How are hierarchical relationships typically handled in relational mapping?',
+    options: ['A) By creating multiple relations', 'B) By using nested relations', 'C) By mapping to a single relation', 'D) By ignoring them'],
+    answer: 'A) By creating multiple relations'
+  },
+  {
+    type: 'mc',
+    question: 'What is the significance of a domain constraint in relational mapping?',
+    options: ['A) It defines the allowable values for an attribute', 'B) It specifies the foreign key constraints', 'C) It determines the primary key for a relation', 'D) It enforces entity integrity'],
+    answer: 'A) It defines the allowable values for an attribute'
+  },
+  {
+    type: 'mc',
+    question: 'Which type of attribute is included in the relation R when mapping a composite attribute?',
+    options: ['A) The entire composite attribute', 'B) Each simple component of the composite attribute', 'C) Only the primary key of the composite attribute', 'D) Only the multivalued component of the composite attribute'],
+    answer: 'B) Each simple component of the composite attribute'
+  }
+];
+
+
+
+
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let selectedTFCount = 0;
+        let selectedMCCount = 0;
+        let selectedQuestions = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateRangeValues();
+            shuffleQuestions();
+        });
+
+        function updateRangeValues() {
+            const tfRange = document.getElementById('tfCount');
+            const mcRange = document.getElementById('mcCount');
+            tfRange.max = questions.filter(q => q.type === 'tf').length;
+            mcRange.max = questions.filter(q => q.type === 'mc').length;
+        }
+
+        function updateValue(id, value) {
+            document.getElementById(id).innerText = value;
+        }
+
+        function shuffleQuestions() {
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+        }
+
+        function startExam() {
+            selectedTFCount = parseInt(document.getElementById('tfCount').value);
+            selectedMCCount = parseInt(document.getElementById('mcCount').value);
+            selectedQuestions = getSelectedQuestions();
+            userAnswers = new Array(selectedQuestions.length).fill(null);
+            document.getElementById('homeContainer').style.display = 'none';
+            document.getElementById('prevBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            document.getElementById('submitBtn').style.display = 'inline-block';
+            displayQuestion();
+        }
+
+        function getSelectedQuestions() {
+            const tfQuestions = questions.filter(q => q.type === 'tf').slice(0, selectedTFCount);
+            const mcQuestions = questions.filter(q => q.type === 'mc').slice(0, selectedMCCount);
+            return [...tfQuestions, ...mcQuestions];
+        }
+
+        function displayQuestion() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            const questionObj = selectedQuestions[currentQuestionIndex];
+            const questionElement = document.createElement('div');
+            questionElement.classList.add('question', 'active');
+            questionElement.innerHTML = `<p>Question ${currentQuestionIndex + 1}: ${questionObj.question}</p>`;
+
+            if (questionObj.type === 'tf') {
+                questionElement.innerHTML += `
+                    <label style="display:block;"><input type="radio" name="answer" value="T"> T</label>
+                    <label style="display:block;"><input type="radio" name="answer" value="F"> F</label>
+                `;
+            } else if (questionObj.type === 'mc') {
+                questionObj.options.forEach(option => {
+                    questionElement.innerHTML += `
+                        <label style="display:block;"><input type="radio" name="answer" value="${option}"> ${option}</label>
+                    `;
+                });
+            }
+            container.appendChild(questionElement);
+
+            if (userAnswers[currentQuestionIndex] !== null) {
+                const selectedOption = document.querySelector(`input[name="answer"][value="${userAnswers[currentQuestionIndex]}"]`);
+                if (selectedOption) selectedOption.checked = F;
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                saveAnswer();
+                currentQuestionIndex--;
+                displayQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < selectedQuestions.length - 1) {
+                saveAnswer();
+                currentQuestionIndex++;
+                displayQuestion();
+            }
+        }
+
+        function saveAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            if (selectedOption) {
+                userAnswers[currentQuestionIndex] = selectedOption.value;
+            }
+        }
+
+        function submitExam() {
+            saveAnswer();
+            let score = 0;
+            let correctAnswers = [];
+            selectedQuestions.forEach((question, index) => {
+                if (userAnswers[index] === question.answer) {
+                    score++;
+                } else {
+                    correctAnswers.push({ question: question.question, correctAnswer: question.answer, userAnswer: userAnswers[index] });
+                }
+            });
+
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `<div class="result">You scored ${score} out of ${selectedQuestions.length}</div>`;
+
+            if (score === selectedQuestions.length) {
+                resultContainer.innerHTML += '<div class="result">Congratulations! You got a perfect score!</div>';
+            } else {
+                correctAnswers.forEach(({ question, correctAnswer, userAnswer }) => {
+                    resultContainer.innerHTML += `
+                        <div class="result">
+                            <p>Question: ${question}</p>
+                            <p>Correct Answer: ${correctAnswer}</p>
+                            <p>Your Answer: ${userAnswer}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('prevBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('homeContainer').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
+

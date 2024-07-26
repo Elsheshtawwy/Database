@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam for ch6</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .question {
+            display: none;
+        }
+        .question.active {
+            display: block;
+        }
+        label {
+            margin-top: 3px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #resultContainer {
+            margin-top: 20px;
+        }
+        .result {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #555;
+        }
+        .home-container {
+            text-align: center;
+        }
+        .slider-label {
+            display: block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="homeContainer" class="home-container">
+            <h1>ِChapter6 Exam</h1>
+            <label class="slider-label">Select number of T/F questions:</label>
+            <input type="range" id="tfCount" min="1" max="0" value="5" oninput="updateValue('tfCountValue', this.value)">
+            <span id="tfCountValue">1</span>
+            <br>
+            <label class="slider-label">Select number of Multiple Choice questions:</label>
+            <input type="range" id="mcCount" min="1" max="0" value="5" oninput="updateValue('mcCountValue', this.value)">
+            <span id="mcCountValue">1</span>
+            <br>
+            <button onclick="startExam()">Start the Exam</button>
+        </div>
+        <div id="questionsContainer"></div>
+        <button id="prevBtn" onclick="prevQuestion()" style="display: none;">Previous</button>
+        <button id="nextBtn" onclick="nextQuestion()" style="display: none;">Next</button>
+        <button id="submitBtn" onclick="submitExam()" style="display: none;">Submit</button>
+        <div id="resultContainer"></div>
+    </div>
+    <footer>Developed by Badr El sheshtawy</footer>
+
+    <script>
+      const questions =[
+      { "type": "tf", "question": "Normalization aims to minimize data redundancy and improve data integrity.", "answer": "T" },
+    { "type": "tf", "question": "A relation in the first normal form must have atomic values.", "answer": "T" },
+    { "type": "tf", "question": "In 2NF, partial dependencies are allowed.", "answer": "F" },
+    { "type": "tf", "question": "In 3NF, transitive dependencies are removed.", "answer": "T" },
+    { "type": "tf", "question": "A relation is in Boyce-Codd Normal Form if every determinant is a candidate key.", "answer": "T" },
+    { "type": "tf", "question": "A functional dependency A → B implies that if two tuples agree on attribute A, they must also agree on attribute B.", "answer": "T" },
+    { "type": "tf", "question": "In 4NF, multi-valued dependencies are not allowed.", "answer": "T" },
+    { "type": "tf", "question": "Normalization does not affect the efficiency of database operations.", "answer": "F" },
+    { "type": "tf", "question": "Normalization always guarantees the best database design.", "answer": "F" },
+    { "type": "tf", "question": "A table with no transitive dependencies is in 2NF.", "answer": "F" },
+    { "type": "tf", "question": "The Boyce-Codd Normal Form (BCNF) is stricter than 3NF.", "answer": "T" },
+    { "type": "tf", "question": "In normalization, the objective is to reduce the number of relations in the database.", "answer": "F" },
+    { "type": "tf", "question": "In 3NF, if a relation has only one candidate key, it is automatically in BCNF.", "answer": "T" },
+    { "type": "tf", "question": "A relation is in 1NF if it contains repeating groups.", "answer": "F" },
+    { "type": "tf", "question": "Normalization often requires the decomposition of relations into multiple tables.", "answer": "T" },
+    { "type": "tf", "question": "Denormalization can be used to improve performance at the expense of redundancy.", "answer": "T" },
+    { "type": "tf", "question": "In normalization, each non-prime attribute must be functionally dependent on the entire candidate key.", "answer": "T" },
+    { "type": "tf", "question": "A relation in 2NF must be in 1NF, but not necessarily in 3NF.", "answer": "T" },
+    { "type": "tf", "question": "Normalization can always resolve all types of anomalies.", "answer": "F" },
+    { "type": "tf", "question": "In normalization, a partial dependency is one where an attribute depends on only a part of a candidate key.", "answer": "T" },
+    { "type": "tf", "question": "A relation in 3NF cannot have any partial dependencies.", "answer": "T" },
+    { "type": "tf", "question": "A relation that is in BCNF can have non-trivial functional dependencies.", "answer": "F" },
+    { "type": "tf", "question": "In 2NF, all non-key attributes must be fully functionally dependent on the primary key.", "answer": "T" },
+    { "type": "tf", "question": "The process of normalization is often used to reduce the number of tables in a database.", "answer": "F" },
+    { "type": "tf", "question": "Every relation in 3NF is also in 2NF.", "answer": "T" },
+    { "type": "tf", "question": "The goal of normalization is to achieve the highest normal form possible.", "answer": "F" },
+    { "type": "tf", "question": "Denormalization is used to enhance data integrity.", "answer": "F" },
+    { "type": "tf", "question": "Normalization can lead to an increase in data redundancy.", "answer": "F" },
+    { "type": "tf", "question": "Normalization often results in more tables but less redundancy.", "answer": "T" },
+    { "type": "tf", "question": "In normalization, an attribute is only dependent on a part of the candidate key in 3NF.", "answer": "F" },
+    { "type": "tf", "question": "A relation in BCNF must satisfy all the requirements of 3NF.", "answer": "T" },
+    { "type": "tf", "question": "The main goal of normalization is to eliminate redundancy and prevent anomalies.", "answer": "T" },
+    { "type": "tf", "question": "Normalization is a one-time process that does not need to be revisited.", "answer": "F" },
+    { "type": "tf", "question": "Partial dependencies are allowed in a relation that is in 3NF.", "answer": "F" },
+    { "type": "tf", "question": "In normalization, a candidate key is a key that can uniquely identify a tuple in a relation.", "answer": "T" },
+    { "type": "tf", "question": "Transitive dependencies are allowed in a relation that is in 2NF.", "answer": "F" },
+    { "type": "tf", "question": "Normalization reduces redundancy by ensuring that each non-key attribute is fully functionally dependent on the primary key.", "answer": "T" },
+    { "type": "tf", "question": "Normalization can help in minimizing insertion, update, and deletion anomalies.", "answer": "T" },
+    { "type": "tf", "question": "In normalization, a relation is said to be in 2NF if it has no partial dependencies.", "answer": "T" },
+    { "type": "tf", "question": "A relation that satisfies all requirements of 1NF, 2NF, and 3NF is automatically in BCNF.", "answer": "F" },
+    { "type": "tf", "question": "Normalization is primarily concerned with the design of tables and relationships.", "answer": "T" },
+    { "type": "tf", "question": "In normalization, the term 'partial dependency' refers to a situation where an attribute is dependent on only a part of the primary key.", "answer": "T" },
+    { "type": "tf", "question": "A relation in 3NF is also in 1NF and 2NF.", "answer": "T" },
+    { "type": "tf", "question": "Denormalization can be beneficial for performance in specific scenarios.", "answer": "T" },
+    { "type": "tf", "question": "Normalization always results in fewer tables compared to the original design.", "answer": "F" },
+    { "type": "tf", "question": "A relation with a composite key can still be in 3NF if it has no transitive dependencies.", "answer": "T" },
+    { "type": "tf", "question": "The main objective of 3NF is to eliminate transitive dependencies while maintaining 2NF.", "answer": "T" },
+    { "type": "tf", "question": "Normalization includes processes to optimize data retrieval speed.", "answer": "F" },
+    { "type": "tf", "question": "In normalization, a relation with a non-prime attribute dependent on another non-prime attribute is in 2NF.", "answer": "F" },
+    { "type": "tf", "question": "Normalization often requires the decomposition of relations to eliminate redundancy.", "answer": "T" },
+    { "type": "tf", "question": "In 3NF, a non-prime attribute should be non-transitively dependent on the primary key.", "answer": "T" },     
+  { type: 'mc', question: 'Which of the following is the first step in the database design process?', options: ['A) Conceptual design', 'B) Logical design', 'C) Requirements collection and analysis', 'D) Physical design'], answer: 'C) Requirements collection and analysis' },
+
+  { type: 'mc', question: 'What is the main purpose of the Entity-Relationship (ER) model in database design?', options: ['A) To create physical database schemas', 'B) To specify operations on database objects', 'C) To provide a high-level conceptual data model', 'D) To manage database storage details'], answer: 'C) To provide a high-level conceptual data model' },
+
+  { type: 'mc', question: 'Which phase of database design involves transforming the conceptual schema into the implementation data model?', options: ['A) Conceptual design', 'B) Logical design', 'C) Physical design', 'D) Requirements collection'], answer: 'B) Logical design' },
+
+  { type: 'mc', question: 'In the physical design phase, which of the following is specified?', options: ['A) Data requirements of the users', 'B) Database schema in the implementation data model', 'C) Internal storage structures and access paths', 'D) Conceptual schema for the database'], answer: 'C) Internal storage structures and access paths' },
+
+  { type: 'mc', question: 'What is the role of functional dependency in relation schema design?', options: ['A) To specify the operations that will be applied to the database', 'B) To measure the appropriateness of attribute groupings into relation schemas', 'C) To define the data requirements of the users', 'D) To implement the database using a DBMS'], answer: 'B) To measure the appropriateness of attribute groupings into relation schemas' },
+
+  { type: 'mc', question: 'Which guideline focuses on designing relation schemas so that they are easy to explain?', options: ['A) Guideline 1', 'B) Guideline 2', 'C) Guideline 3', 'D) Guideline 4'], answer: 'A) Guideline 1' },
+
+  { type: 'mc', question: 'What does Guideline 2 suggest regarding insertion, deletion, and modification anomalies?', options: ['A) They are acceptable if they improve performance', 'B) They should be avoided by designing base relation schemas carefully', 'C) They should be addressed in the physical design phase', 'D) They are irrelevant to database design'], answer: 'B) They should be avoided by designing base relation schemas carefully' },
+
+  { type: 'mc', question: 'What is the primary key of the EMPLOYEE relation schema in the COMPANY database example?', options: ['A) Dnumber', 'B) Ssn', 'C) Dmgr_ssn', 'D) Pnumber'], answer: 'B) Ssn' },
+
+  { type: 'mc', question: 'Which normal form requires that a relation must only contain atomic values?', options: ['A) First Normal Form (1NF)', 'B) Second Normal Form (2NF)', 'C) Third Normal Form (3NF)', 'D) Boyce-Codd Normal Form (BCNF)'], answer: 'A) First Normal Form (1NF)' },
+
+  { type: 'mc', question: 'In normalization, what does the process of decomposing relation schemas aim to achieve?', options: ['A) Minimize redundancy and anomalies', 'B) Simplify the physical design of the database', 'C) Define functional dependencies', 'D) Enhance the conceptual design of the database'], answer: 'A) Minimize redundancy and anomalies' },
+
+  { type: 'mc', question: 'Which of the following is an example of an insertion anomaly?', options: ['A) Difficulty in inserting a new department without employees', 'B) Loss of department information when deleting the last employee', 'C) Inconsistent data after changing a department manager', 'D) Null values in attributes due to frequent updates'], answer: 'A) Difficulty in inserting a new department without employees' },
+
+  { type: 'mc', question: 'How is a superkey defined in relational schema design?', options: ['A) A minimal set of attributes that uniquely identifies tuples', 'B) A set of attributes that uniquely identifies tuples', 'C) A set of attributes that includes all possible keys', 'D) A set of attributes that defines functional dependencies'], answer: 'B) A set of attributes that uniquely identifies tuples' },
+
+  { type: 'mc', question: 'Which normalization technique removes multivalued attributes by placing them in a separate relation?', options: ['A) Splitting attributes', 'B) Removing nested relations', 'C) Creating a new relation for multivalued attributes', 'D) Expanding the primary key'], answer: 'C) Creating a new relation for multivalued attributes' },
+
+  { type: 'mc', question: 'What is the main issue with a relation schema that includes composite attributes?', options: ['A) Redundancy in the relation', 'B) Lack of atomicity', 'C) Difficulty in defining functional dependencies', 'D) Violation of foreign key constraints'], answer: 'B) Lack of atomicity' },
+
+  { type: 'mc', question: 'Which functional dependency should hold in the EMP_PROJ relation schema?', options: ['A) SSN ® ENAME', 'B) ENAME ® HOURS', 'C) PNUMBER ® SSN', 'D) HOURS ® PNUMBER'], answer: 'A) SSN ® ENAME' },
+
+  { type: 'mc', question: 'What does Guideline 3 suggest regarding null values in base relations?', options: ['A) Null values should be avoided at all costs', 'B) Null values should only be used if unavoidable', 'C) Null values are acceptable if they apply to a majority of tuples', 'D) Null values should be used to improve performance'], answer: 'B) Null values should only be used if unavoidable' },
+
+  { type: 'mc', question: 'Which of the following is not a step in the database design process?', options: ['A) Requirements collection and analysis', 'B) Conceptual design', 'C) Physical design', 'D) User training'], answer: 'D) User training' },
+
+  { type: 'mc', question: 'In the context of database design, what is the primary goal of functional dependencies?', options: ['A) To enhance the physical storage of data', 'B) To define relationships between different data attributes', 'C) To formalize constraints on data relationships', 'D) To optimize query performance'], answer: 'C) To formalize constraints on data relationships' },
+
+  { type: 'mc', question: 'What problem can occur if an employee tuple is deleted in the EMP_DEPT relation?', options: ['A) Loss of department information if it is the last employee in that department', 'B) Redundancy of employee data', 'C) Inconsistent salary data', 'D) Difficulty in assigning a new employee'], answer: 'A) Loss of department information if it is the last employee in that department' },
+
+  { type: 'mc', question: 'What does a candidate key represent in a relation schema?', options: ['A) A minimal superkey', 'B) A non-minimal superkey', 'C) A primary key', 'D) A foreign key'], answer: 'A) A minimal superkey' },
+
+  { type: 'mc', question: 'Which of the following relations is not considered a good design according to Guideline 1?', options: ['A) EMPLOYEE relation', 'B) DEPARTMENT relation', 'C) EMP_DEPT relation', 'D) WORKS_ON relation'], answer: 'C) EMP_DEPT relation' },
+
+  { type: 'mc', question: 'What is the role of normalization in database design?', options: ['A) To create new attributes', 'B) To remove redundant data and anomalies', 'C) To define data types', 'D) To implement database queries'], answer: 'B) To remove redundant data and anomalies' },
+
+  { type: 'mc', question: 'What does the term “functional dependency” describe?', options: ['A) The relationship between data attributes and primary keys', 'B) The constraint that one set of attributes determines another', 'C) The dependency of attributes on storage medium', 'D) The role of foreign keys in a relation'], answer: 'B) The constraint that one set of attributes determines another' },
+
+  { type: 'mc', question: 'Which of the following is an example of a modification anomaly?', options: ['A) Changing the value of a department manager requires updating all related employee tuples', 'B) Difficulty in inserting new departments', 'C) Loss of department information when deleting employees', 'D) Insertion of null values for optional attributes'], answer: 'A) Changing the value of a department manager requires updating all related employee tuples' },
+
+  { type: 'mc', question: 'In which phase of database design are database transactions designed and implemented?', options: ['A) Conceptual design', 'B) Logical design', 'C) Physical design', 'D) Requirements analysis'], answer: 'C) Physical design' },
+
+  { type: 'mc', question: 'What is the main purpose of creating a conceptual schema in database design?', options: ['A) To implement database queries', 'B) To specify data requirements and constraints', 'C) To optimize query performance', 'D) To manage storage details'], answer: 'B) To specify data requirements and constraints' },
+
+  { type: 'mc', question: 'Which attribute is typically part of the primary key in the DEPARTMENT relation?', options: ['A) Dname', 'B) Dnumber', 'C) Dmgr_ssn', 'D) Dlocation'], answer: 'B) Dnumber' },
+
+  { type: 'mc', question: 'What does Guideline 4 emphasize in relation to functional dependencies?', options: ['A) They should be minimized', 'B) They should be clearly defined and maintained', 'C) They should be used to create new attributes', 'D) They should be avoided'], answer: 'B) They should be clearly defined and maintained' },
+
+  { type: 'mc', question: 'Which type of anomaly is mitigated by ensuring that all tuples are atomic?', options: ['A) Insertion anomaly', 'B) Modification anomaly', 'C) Deletion anomaly', 'D) Redundancy anomaly'], answer: 'D) Redundancy anomaly' },
+
+  { type: 'mc', question: 'Which of the following normalization forms ensures that there are no transitive dependencies?', options: ['A) First Normal Form (1NF)', 'B) Second Normal Form (2NF)', 'C) Third Normal Form (3NF)', 'D) Boyce-Codd Normal Form (BCNF)'], answer: 'C) Third Normal Form (3NF)' },
+
+  { type: 'mc', question: 'In the context of relational databases, what does the term “lossless join” refer to?', options: ['A) The ability to reassemble decomposed relations without losing information', 'B) The process of joining relations to improve performance', 'C) The property of a database that prevents loss of data during transactions', 'D) The ability to join multiple tables without duplication'], answer: 'A) The ability to reassemble decomposed relations without losing information' },
+
+  { type: 'mc', question: 'What is the main purpose of the Boyce-Codd Normal Form (BCNF) in database normalization?', options: ['A) To handle partial dependencies', 'B) To eliminate all anomalies related to functional dependencies', 'C) To ensure that every determinant is a candidate key', 'D) To remove multivalued dependencies'], answer: 'C) To ensure that every determinant is a candidate key' },
+
+  { type: 'mc', question: 'Which of the following describes a multivalued dependency in a relation?', options: ['A) An attribute in one relation is dependent on multiple attributes in another relation', 'B) One attribute determines multiple values of another attribute', 'C) A single attribute in a relation can hold multiple values', 'D) An attribute is dependent on another attribute within the same relation'], answer: 'B) One attribute determines multiple values of another attribute' },
+
+  { type: 'mc', question: 'What is the impact of a functional dependency of the form A → B on the decomposition of a relation?', options: ['A) It ensures that no data is lost during decomposition', 'B) It helps in identifying candidate keys for the relation', 'C) It can cause redundancy if not properly managed', 'D) It simplifies the schema design by merging relations'], answer: 'C) It can cause redundancy if not properly managed' },
+
+  { type: 'mc', question: 'Which property is guaranteed by a relation being in the Second Normal Form (2NF)?', options: ['A) No partial dependencies on the primary key', 'B) No transitive dependencies', 'C) No multivalued dependencies', 'D) Every non-prime attribute is fully functionally dependent on the primary key'], answer: 'A) No partial dependencies on the primary key' },
+
+  { type: 'mc', question: 'In the context of database design, what does a “dependency preservation” mean?', options: ['A) Ensuring that all functional dependencies are preserved in the decomposed relations', 'B) Maintaining data consistency during updates', 'C) Preserving the order of tuples in a relation', 'D) Keeping the original schema intact during normalization'], answer: 'A) Ensuring that all functional dependencies are preserved in the decomposed relations' },
+
+  { type: 'mc', question: 'What does it mean for a relation to be in the Fourth Normal Form (4NF)?', options: ['A) The relation has no multivalued dependencies', 'B) The relation is free from all types of anomalies', 'C) The relation is in Boyce-Codd Normal Form (BCNF)', 'D) The relation has no partial dependencies'], answer: 'A) The relation has no multivalued dependencies' },
+
+  { type: 'mc', question: 'Which of the following best describes a partial dependency in a relation?', options: ['A) A dependency where a non-key attribute is dependent on only a part of a composite primary key', 'B) A dependency where an attribute is functionally dependent on another attribute', 'C) A dependency where a key attribute is dependent on a non-key attribute', 'D) A dependency where an attribute determines multiple values'], answer: 'A) A dependency where a non-key attribute is dependent on only a part of a composite primary key' },
+
+  { type: 'mc', question: 'What is a transitive dependency in the context of database normalization?', options: ['A) A dependency where one non-key attribute depends on another non-key attribute', 'B) A dependency where an attribute is dependent on a primary key', 'C) A dependency where a key attribute determines other attributes', 'D) A dependency where a non-key attribute is dependent on a part of a primary key'], answer: 'A) A dependency where one non-key attribute depends on another non-key attribute' },
+
+  { type: 'mc', question: 'Which normal form deals specifically with eliminating transitive dependencies?', options: ['A) First Normal Form (1NF)', 'B) Second Normal Form (2NF)', 'C) Third Normal Form (3NF)', 'D) Boyce-Codd Normal Form (BCNF)'], answer: 'C) Third Normal Form (3NF)' },
+
+  { type: 'mc', question: 'What does it mean for a relation to be in the Fifth Normal Form (5NF)?', options: ['A) The relation has no join dependencies', 'B) The relation is in Fourth Normal Form (4NF)', 'C) The relation has no transitive dependencies', 'D) The relation has no partial dependencies'], answer: 'A) The relation has no join dependencies' },
+
+  { type: 'mc', question: 'What is a join dependency in the context of database normalization?', options: ['A) A condition where a relation cannot be decomposed into smaller relations without losing information', 'B) A condition where a relation is divided into multiple relations', 'C) A dependency where a set of attributes determines another set of attributes', 'D) A condition where relations are joined based on primary keys'], answer: 'A) A condition where a relation cannot be decomposed into smaller relations without losing information' },
+
+  { type: 'mc', question: 'What is the purpose of using surrogate keys in database design?', options: ['A) To avoid the complexity of natural keys', 'B) To enforce referential integrity', 'C) To improve query performance', 'D) To simplify schema design'], answer: 'A) To avoid the complexity of natural keys' },
+
+  { type: 'mc', question: 'Which of the following is true about a relation that is in the Third Normal Form (3NF)?', options: ['A) It is also in the Second Normal Form (2NF)', 'B) It has no multivalued dependencies', 'C) It has no partial dependencies', 'D) It has a single candidate key'], answer: 'A) It is also in the Second Normal Form (2NF)' },
+
+  { type: 'mc', question: 'In which situation would a database designer need to use the concept of a “transitive closure”?', options: ['A) When determining the completeness of a functional dependency', 'B) When optimizing query performance', 'C) When resolving multivalued dependencies', 'D) When analyzing the completeness of a relation schema'], answer: 'A) When determining the completeness of a functional dependency' },
+
+  { type: 'mc', question: 'What is the role of the “canonical cover” in database normalization?', options: ['A) To simplify the set of functional dependencies', 'B) To provide a normalized schema', 'C) To merge relations based on functional dependencies', 'D) To define candidate keys'], answer: 'A) To simplify the set of functional dependencies' },
+
+  { type: 'mc', question: 'Which of the following is an effect of having a relation that is not in Boyce-Codd Normal Form (BCNF)?', options: ['A) Redundancy due to functional dependencies not being properly handled', 'B) Loss of information during decomposition', 'C) Increased complexity in query processing', 'D) Poor performance in data retrieval'], answer: 'A) Redundancy due to functional dependencies not being properly handled' },
+
+  { type: 'mc', question: 'What is the significance of the “minimal cover” in functional dependencies?', options: ['A) It provides the smallest set of functional dependencies that is equivalent to the original set', 'B) It represents the most complex set of functional dependencies', 'C) It includes all possible functional dependencies for a relation', 'D) It removes redundant attributes from a relation'], answer: 'A) It provides the smallest set of functional dependencies that is equivalent to the original set' },
+
+  { type: 'mc', question: 'What is the primary goal of database normalization?', options: ['A) To reduce data redundancy and improve data integrity', 'B) To increase query performance', 'C) To simplify the database schema', 'D) To enforce referential integrity'], answer: 'A) To reduce data redundancy and improve data integrity' },
+
+  { type: 'mc', question: 'Which normal form eliminates multivalued dependencies from a relation?', options: ['A) First Normal Form (1NF)', 'B) Second Normal Form (2NF)', 'C) Third Normal Form (3NF)', 'D) Fourth Normal Form (4NF)'], answer: 'D) Fourth Normal Form (4NF)' },
+
+  { type: 'mc', question: 'Which of the following is not a functional dependency?', options: ['A) A → B', 'B) A, B → C', 'C) A → A', 'D) A → A, B'], answer: 'D) A → A, B' },
+
+  { type: 'mc', question: 'How does the concept of “transitive dependency” affect the normalization process?', options: ['A) It requires that all non-key attributes are directly dependent on the primary key', 'B) It introduces new relations to avoid redundancy', 'C) It necessitates the decomposition of relations to eliminate indirect dependencies', 'D) It simplifies the schema design by merging attributes'], answer: 'C) It necessitates the decomposition of relations to eliminate indirect dependencies' },
+
+  { type: 'mc', question: 'What is the key difference between functional dependency and multivalued dependency?', options: ['A) Functional dependency involves a single value for each attribute, while multivalued dependency involves multiple values', 'B) Functional dependency requires that one attribute is functionally dependent on another, while multivalued dependency involves multiple independent attributes', 'C) Functional dependency involves relationships between attributes in different relations, while multivalued dependency involves multiple values within the same relation', 'D) Functional dependency is used for normalization, while multivalued dependency is not'], answer: 'A) Functional dependency involves a single value for each attribute, while multivalued dependency involves multiple values' }
+
+];
+
+
+
+
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let selectedTFCount = 0;
+        let selectedMCCount = 0;
+        let selectedQuestions = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateRangeValues();
+            shuffleQuestions();
+        });
+
+        function updateRangeValues() {
+            const tfRange = document.getElementById('tfCount');
+            const mcRange = document.getElementById('mcCount');
+            tfRange.max = questions.filter(q => q.type === 'tf').length;
+            mcRange.max = questions.filter(q => q.type === 'mc').length;
+        }
+
+        function updateValue(id, value) {
+            document.getElementById(id).innerText = value;
+        }
+
+        function shuffleQuestions() {
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+        }
+
+        function startExam() {
+            selectedTFCount = parseInt(document.getElementById('tfCount').value);
+            selectedMCCount = parseInt(document.getElementById('mcCount').value);
+            selectedQuestions = getSelectedQuestions();
+            userAnswers = new Array(selectedQuestions.length).fill(null);
+            document.getElementById('homeContainer').style.display = 'none';
+            document.getElementById('prevBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            document.getElementById('submitBtn').style.display = 'inline-block';
+            displayQuestion();
+        }
+
+        function getSelectedQuestions() {
+            const tfQuestions = questions.filter(q => q.type === 'tf').slice(0, selectedTFCount);
+            const mcQuestions = questions.filter(q => q.type === 'mc').slice(0, selectedMCCount);
+            return [...tfQuestions, ...mcQuestions];
+        }
+
+        function displayQuestion() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            const questionObj = selectedQuestions[currentQuestionIndex];
+            const questionElement = document.createElement('div');
+            questionElement.classList.add('question', 'active');
+            questionElement.innerHTML = `<p>Question ${currentQuestionIndex + 1}: ${questionObj.question}</p>`;
+
+            if (questionObj.type === 'tf') {
+                questionElement.innerHTML += `
+                    <label style="display:block;"><input type="radio" name="answer" value="T"> T</label>
+                    <label style="display:block;"><input type="radio" name="answer" value="F"> F</label>
+                `;
+            } else if (questionObj.type === 'mc') {
+                questionObj.options.forEach(option => {
+                    questionElement.innerHTML += `
+                        <label style="display:block;"><input type="radio" name="answer" value="${option}"> ${option}</label>
+                    `;
+                });
+            }
+            container.appendChild(questionElement);
+
+            if (userAnswers[currentQuestionIndex] !== null) {
+                const selectedOption = document.querySelector(`input[name="answer"][value="${userAnswers[currentQuestionIndex]}"]`);
+                if (selectedOption) selectedOption.checked = F;
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                saveAnswer();
+                currentQuestionIndex--;
+                displayQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < selectedQuestions.length - 1) {
+                saveAnswer();
+                currentQuestionIndex++;
+                displayQuestion();
+            }
+        }
+
+        function saveAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            if (selectedOption) {
+                userAnswers[currentQuestionIndex] = selectedOption.value;
+            }
+        }
+
+        function submitExam() {
+            saveAnswer();
+            let score = 0;
+            let correctAnswers = [];
+            selectedQuestions.forEach((question, index) => {
+                if (userAnswers[index] === question.answer) {
+                    score++;
+                } else {
+                    correctAnswers.push({ question: question.question, correctAnswer: question.answer, userAnswer: userAnswers[index] });
+                }
+            });
+
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `<div class="result">You scored ${score} out of ${selectedQuestions.length}</div>`;
+
+            if (score === selectedQuestions.length) {
+                resultContainer.innerHTML += '<div class="result">Congratulations! You got a perfect score!</div>';
+            } else {
+                correctAnswers.forEach(({ question, correctAnswer, userAnswer }) => {
+                    resultContainer.innerHTML += `
+                        <div class="result">
+                            <p>Question: ${question}</p>
+                            <p>Correct Answer: ${correctAnswer}</p>
+                            <p>Your Answer: ${userAnswer}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('prevBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('homeContainer').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
+

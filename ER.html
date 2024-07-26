@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .question {
+            display: none;
+        }
+        .question.active {
+            display: block;
+        }
+        label {
+            margin-top: 3px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #resultContainer {
+            margin-top: 20px;
+        }
+        .result {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #555;
+        }
+        .home-container {
+            text-align: center;
+        }
+        .slider-label {
+            display: block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="homeContainer" class="home-container">
+            <h1>ER Exam</h1>
+            <label class="slider-label">Select number of T/F questions:</label>
+            <input type="range" id="tfCount" min="1" max="0" value="5" oninput="updateValue('tfCountValue', this.value)">
+            <span id="tfCountValue">1</span>
+            <br>
+            <label class="slider-label">Select number of Multiple Choice questions:</label>
+            <input type="range" id="mcCount" min="1" max="0" value="5" oninput="updateValue('mcCountValue', this.value)">
+            <span id="mcCountValue">1</span>
+            <br>
+            <button onclick="startExam()">Start the Exam</button>
+        </div>
+        <div id="questionsContainer"></div>
+        <button id="prevBtn" onclick="prevQuestion()" style="display: none;">Previous</button>
+        <button id="nextBtn" onclick="nextQuestion()" style="display: none;">Next</button>
+        <button id="submitBtn" onclick="submitExam()" style="display: none;">Submit</button>
+        <div id="resultContainer"></div>
+    </div>
+    <footer>Developed by Badr El sheshtawy</footer>
+
+    <script>
+
+const questions =[
+  {
+    "type": "mc",
+    "question": "What is a primary key used for in relational databases?",
+    "options": [
+      "A) To uniquely identify each record in a relation",
+      "B) To define the attributes of a relation",
+      "C) To create foreign key relationships",
+      "D) To enforce referential integrity"
+    ],
+    "answer": "A) To uniquely identify each record in a relation"
+  },
+  {
+    "type": "mc",
+    "question": "Which of the following best describes a composite attribute?",
+    "options": [
+      "A) An attribute that is itself composed of multiple attributes",
+      "B) An attribute that can have multiple values",
+      "C) An attribute that is derived from other attributes",
+      "D) An attribute that is a primary key"
+    ],
+    "answer": "A) An attribute that is itself composed of multiple attributes"
+  },
+  {
+    "type": "mc",
+    "question": "When mapping an associative entity, what should the resulting relation include?",
+    "options": [
+      "A) Only the attributes of the associative entity",
+      "B) The primary keys of the participating entities and any attributes of the associative entity",
+      "C) Only the primary keys of the participating entities",
+      "D) Only the attributes of the participating entities"
+    ],
+    "answer": "B) The primary keys of the participating entities and any attributes of the associative entity"
+  },
+  {
+    "type": "mc",
+    "question": "What is the purpose of normalization in database design?",
+    "options": [
+      "A) To eliminate redundancy and improve data integrity",
+      "B) To add more attributes to a relation",
+      "C) To simplify SQL queries",
+      "D) To increase the size of the database"
+    ],
+    "answer": "A) To eliminate redundancy and improve data integrity"
+  },
+  {
+    "type": "mc",
+    "question": "In a relational schema, what does a foreign key represent?",
+    "options": [
+      "A) A unique identifier for a relation",
+      "B) An attribute that links to the primary key of another relation",
+      "C) An attribute that enforces domain constraints",
+      "D) An attribute that describes the data type of other attributes"
+    ],
+    "answer": "B) An attribute that links to the primary key of another relation"
+  },
+  {
+    "type": "mc",
+    "question": "Which of the following statements is true about an n-ary relationship type?",
+    "options": [
+      "A) It involves more than two entity types",
+      "B) It involves exactly two entity types",
+      "C) It involves only one entity type",
+      "D) It is equivalent to a binary relationship type"
+    ],
+    "answer": "A) It involves more than two entity types"
+  },
+  {
+    "type": "mc",
+    "question": "What does a domain constraint ensure in a relational schema?",
+    "options": [
+      "A) That all attributes of a relation are unique",
+      "B) That attributes only contain allowable values",
+      "C) That foreign keys correctly reference primary keys",
+      "D) That all relations are properly normalized"
+    ],
+    "answer": "B) That attributes only contain allowable values"
+  },
+  {
+    "type": "mc",
+    "question": "What is the purpose of creating a new relation when mapping a multivalued attribute?",
+    "options": [
+      "A) To store the multiple values of the attribute separately",
+      "B) To eliminate redundancy in the schema",
+      "C) To increase the complexity of the database",
+      "D) To enforce referential integrity"
+    ],
+    "answer": "A) To store the multiple values of the attribute separately"
+  },
+  {
+    "type": "mc",
+    "question": "Which type of entity typically requires a foreign key reference in relational mapping?",
+    "options": [
+      "A) Regular (strong) entity",
+      "B) Weak entity",
+      "C) Associative entity",
+      "D) Multivalued attribute"
+    ],
+    "answer": "B) Weak entity"
+  },
+  {
+    "type": "mc",
+    "question": "In a relational schema, what is the role of a surrogate key?",
+    "options": [
+      "A) To uniquely identify records when no natural key exists",
+      "B) To enforce domain constraints",
+      "C) To define relationships between entities",
+      "D) To replace the primary key with a composite key"
+    ],
+    "answer": "A) To uniquely identify records when no natural key exists"
+  },
+  {
+    "type": "mc",
+    "question": "What is an example of a unary relationship in an ER model?",
+    "options": [
+      "A) An employee manages other employees",
+      "B) A student enrolls in multiple courses",
+      "C) A customer places an order",
+      "D) A product is supplied by multiple suppliers"
+    ],
+    "answer": "A) An employee manages other employees"
+  },
+  {
+    "type": "mc",
+    "question": "Which step in the ER to Relational Mapping Algorithm involves creating a new relation for a many-to-many relationship?",
+    "options": [
+      "A) Mapping Regular (Strong) Entity Type",
+      "B) Mapping Weak Entity Type",
+      "C) Mapping Binary M:N Relationship Type",
+      "D) Mapping Binary 1:N Relationship Type"
+    ],
+    "answer": "C) Mapping Binary M:N Relationship Type"
+  },
+  {
+    "type": "mc",
+    "question": "What is a key feature of a primary key in a relational database?",
+    "options": [
+      "A) It must be unique for each record",
+      "B) It can be null",
+      "C) It is used to link multiple relations",
+      "D) It is automatically generated by the database"
+    ],
+    "answer": "A) It must be unique for each record"
+  },
+  {
+    "type": "mc",
+    "question": "What does the term 'referential integrity' refer to in relational databases?",
+    "options": [
+      "A) Ensuring that every foreign key value matches a primary key value in another relation",
+      "B) Ensuring that all attributes are of the correct data type",
+      "C) Ensuring that all relations are normalized",
+      "D) Ensuring that primary keys are unique"
+    ],
+    "answer": "A) Ensuring that every foreign key value matches a primary key value in another relation"
+  },
+  {
+    "type": "mc",
+    "question": "What is the role of an associative entity in a relational schema?",
+    "options": [
+      "A) To represent a many-to-many relationship",
+      "B) To replace a weak entity",
+      "C) To store multiple values of a composite attribute",
+      "D) To simplify complex unary relationships"
+    ],
+    "answer": "A) To represent a many-to-many relationship"
+  },
+  {
+    "type": "mc",
+    "question": "When mapping a binary 1:N relationship type, what is the correct placement of the foreign key?",
+    "options": [
+      "A) In the relation representing the 1-side",
+      "B) In the relation representing the N-side",
+      "C) In both relations",
+      "D) In a new relation"
+    ],
+    "answer": "B) In the relation representing the N-side"
+  },
+  {
+    "type": "mc",
+    "question": "How are hierarchical relationships typically represented in a relational schema?",
+    "options": [
+      "A) By using a single relation with recursive foreign keys",
+      "B) By using multiple relations with foreign keys",
+      "C) By creating a separate schema for each level",
+      "D) By combining all related entities into one relation"
+    ],
+    "answer": "A) By using a single relation with recursive foreign keys"
+  },
+  {
+    "type": "mc",
+    "question": "What does a composite key consist of in relational databases?",
+    "options": [
+      "A) Multiple attributes that together form a unique identifier",
+      "B) A single attribute that uniquely identifies a record",
+      "C) An attribute and a foreign key",
+      "D) A surrogate key and a primary key"
+    ],
+    "answer": "A) Multiple attributes that together form a unique identifier"
+  },
+  {
+    "type": "mc",
+    "question": "Which of the following is true about a multivalued attribute in relational mapping?",
+    "options": [
+      "A) It is represented by creating a new relation with a foreign key",
+      "B) It is directly included in the original relation",
+      "C) It is always ignored in the mapping process",
+      "D) It is replaced by a composite attribute"
+    ],
+    "answer": "A) It is represented by creating a new relation with a foreign key"
+  },
+  {
+    "type": "mc",
+    "question": "What is the role of a domain constraint in the context of relational schema design?",
+    "options": [
+      "A) To specify the allowable values for an attribute",
+      "B) To define the relationships between different relations",
+      "C) To ensure that primary keys are unique",
+      "D) To create indexes for faster query performance"
+    ],
+    "answer": "A) To specify the allowable values for an attribute"
+  },
+  {
+    "type": "mc",
+    "question": "In the context of relational mapping, what does 'entity integrity' ensure?",
+    "options": [
+      "A) All primary key values are unique and not null",
+      "B) All foreign keys correctly reference primary keys",
+      "C) All attributes have valid data types",
+      "D) All relations are in the third normal form"
+    ],
+    "answer": "A) All primary key values are unique and not null"
+  },
+  {
+    "type": "mc",
+    "question": "What does a weak entity type require in a relational schema?",
+    "options": [
+      "A) The inclusion of the primary key of the owner entity type",
+      "B) The creation of a composite key",
+      "C) The use of a surrogate key",
+      "D) The elimination of any composite attributes"
+    ],
+    "answer": "A) The inclusion of the primary key of the owner entity type"
+  },
+  {
+    "type": "mc",
+    "question": "What is the primary purpose of normalization in relational databases?",
+    "options": [
+      "A) To minimize redundancy and improve data integrity",
+      "B) To increase the size of the database",
+      "C) To simplify database queries",
+      "D) To ensure that all attributes are indexed"
+    ],
+    "answer": "A) To minimize redundancy and improve data integrity"
+  },
+  {
+    "type": "mc",
+    "question": "In the context of ER to relational mapping, how is a multivalued attribute represented?",
+    "options": [
+      "A) By creating a new relation with the multivalued attribute and a foreign key",
+      "B) By including the attribute in the original relation",
+      "C) By using a composite attribute",
+      "D) By creating a separate schema"
+    ],
+    "answer": "A) By creating a new relation with the multivalued attribute and a foreign key"
+  },
+  {
+    "type": "mc",
+    "question": "What is the significance of a primary key in relational database design?",
+    "options": [
+      "A) It uniquely identifies each record in a relation",
+      "B) It enforces referential integrity",
+      "C) It defines relationships between different relations",
+      "D) It specifies the domain constraints for attributes"
+    ],
+    "answer": "A) It uniquely identifies each record in a relation"
+  },
+  {
+    "type": "mc",
+    "question": "Which of the following describes a unary relationship?",
+    "options": [
+      "A) A relationship between an entity and itself",
+      "B) A relationship between two different entities",
+      "C) A relationship between more than two entities",
+      "D) A relationship involving multiple instances of the same entity"
+    ],
+    "answer": "A) A relationship between an entity and itself"
+  },
+  {
+    "type": "mc",
+    "question": "How is a composite attribute represented in a relational schema?",
+    "options": [
+      "A) As separate simple attributes",
+      "B) As a single attribute",
+      "C) As a combination of multivalued attributes",
+      "D) As a foreign key"
+    ],
+    "answer": "A) As separate simple attributes"
+  },
+  {
+    "type": "mc",
+    "question": "What is an example of a many-to-many relationship in a relational schema?",
+    "options": [
+      "A) Students enrolled in multiple courses",
+      "B) Employees managing multiple departments",
+      "C) Orders placed by a single customer",
+      "D) Products supplied by multiple suppliers"
+    ],
+    "answer": "A) Students enrolled in multiple courses"
+  },
+  {
+    "type": "mc",
+    "question": "What should be done when mapping a binary 1:1 relationship type?",
+    "options": [
+      "A) Include the foreign key in one of the entities",
+      "B) Create a new relation for the relationship",
+      "C) Add a foreign key to both entities",
+      "D) Use a surrogate key for both entities"
+    ],
+    "answer": "A) Include the foreign key in one of the entities"
+  },
+  {
+    "type": "mc",
+    "question": "How are binary relationships typically represented in a relational schema?",
+    "options": [
+      "A) By creating new relations for each relationship",
+      "B) By adding foreign keys to existing relations",
+      "C) By combining related entities into a single relation",
+      "D) By using composite attributes"
+    ],
+    "answer": "B) By adding foreign keys to existing relations"
+  },
+  {
+    "type": "mc",
+    "question": "What is a surrogate key in the context of relational databases?",
+    "options": [
+      "A) A unique identifier created to replace a natural key",
+      "B) A key that combines multiple attributes",
+      "C) A key derived from a composite key",
+      "D) A key that ensures domain constraints"
+    ],
+    "answer": "A) A unique identifier created to replace a natural key"
+  },
+  {
+    "type": "mc",
+    "question": "Which step in the ER to Relational Mapping Algorithm involves mapping the primary key of the owner entity to the weak entity type relation?",
+    "options": [
+      "A) Mapping Regular Entity Type",
+      "B) Mapping Weak Entity Type",
+      "C) Mapping Binary 1:N Relationship Type",
+      "D) Mapping Binary M:N Relationship Type"
+    ],
+    "answer": "B) Mapping Weak Entity Type"
+  },
+  {
+    "type": "mc",
+    "question": "When mapping a binary 1:N relationship type, what does the foreign key in the N-side relation represent?",
+    "options": [
+      "A) It refers to the primary key of the 1-side relation",
+      "B) It refers to the attributes of the N-side relation",
+      "C) It represents a composite attribute",
+      "D) It is a surrogate key"
+    ],
+    "answer": "A) It refers to the primary key of the 1-side relation"
+  },
+  {
+    "type": "mc",
+    "question": "In relational schema design, how is a weak entity type typically represented?",
+    "options": [
+      "A) By including its attributes and the primary key of its owner entity",
+      "B) By using a surrogate key",
+      "C) By creating a new relation for each attribute",
+      "D) By combining it with a strong entity type in a single relation"
+    ],
+    "answer": "A) By including its attributes and the primary key of its owner entity"
+  },
+  {
+    "type": "mc",
+    "question": "What does 'entity integrity' ensure in a relational database?",
+    "options": [
+      "A) That all primary key values are unique and not null",
+      "B) That all foreign key values match primary keys",
+      "C) That all attributes are indexed",
+      "D) That all relations are normalized"
+    ],
+    "answer": "A) That all primary key values are unique and not null"
+  },
+  {
+    "type": "mc",
+    "question": "What is the main goal of using a surrogate key?",
+    "options": [
+      "A) To provide a unique identifier when a natural key is not available",
+      "B) To enforce referential integrity",
+      "C) To normalize a relation",
+      "D) To replace foreign keys"
+    ],
+    "answer": "A) To provide a unique identifier when a natural key is not available"
+  },
+  {
+    "type": "mc",
+    "question": "Which of the following accurately describes an associative entity?",
+    "options": [
+      "A) An entity that is used to represent a many-to-many relationship",
+      "B) An entity that stores attributes only",
+      "C) An entity that represents a single relationship type",
+      "D) An entity that links to multiple weak entities"
+    ],
+    "answer": "A) An entity that is used to represent a many-to-many relationship"
+  },
+  {
+    "type": "mc",
+    "question": "What is the primary function of a composite key in relational databases?",
+    "options": [
+      "A) To uniquely identify records using multiple attributes",
+      "B) To link multiple relations",
+      "C) To ensure domain constraints",
+      "D) To enforce entity integrity"
+    ],
+    "answer": "A) To uniquely identify records using multiple attributes"
+  },
+  {
+    "type": "mc",
+    "question": "How is a multivalued attribute handled in a relational schema?",
+    "options": [
+      "A) By creating a new relation for the multivalued attribute",
+      "B) By including it in the original relation",
+      "C) By combining it with composite attributes",
+      "D) By creating a surrogate key"
+    ],
+    "answer": "A) By creating a new relation for the multivalued attribute"
+  },
+  {
+    "type": "mc",
+    "question": "In a relational schema, what is a domain constraint used for?",
+    "options": [
+      "A) To define valid values for an attribute",
+      "B) To specify the primary keys",
+      "C) To create foreign key relationships",
+      "D) To normalize relations"
+    ],
+    "answer": "A) To define valid values for an attribute"
+  },
+  {
+    "type": "mc",
+    "question": "What is a common example of a unary relationship?",
+    "options": [
+      "A) An employee managing other employees",
+      "B) A customer placing an order",
+      "C) A product supplied by multiple suppliers",
+      "D) A student enrolling in multiple courses"
+    ],
+    "answer": "A) An employee managing other employees"
+  },
+  {
+    "type": "mc",
+    "question": "How should an associative entity be mapped in relational design?",
+    "options": [
+      "A) By creating a new relation with the primary keys of participating entities and its own attributes",
+      "B) By adding its attributes to existing relations",
+      "C) By creating a composite attribute",
+      "D) By using a surrogate key"
+    ],
+    "answer": "A) By creating a new relation with the primary keys of participating entities and its own attributes"
+  },
+  {
+    "type": "mc",
+    "question": "In a binary 1:1 relationship, where is the foreign key placed?",
+    "options": [
+      "A) In one of the two entities involved in the relationship",
+      "B) In a new relation created for the relationship",
+      "C) In both entities",
+      "D) In a separate schema"
+    ],
+    "answer": "A) In one of the two entities involved in the relationship"
+  }
+];
+
+
+
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let selectedTFCount = 0;
+        let selectedMCCount = 0;
+        let selectedQuestions = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateRangeValues();
+            shuffleQuestions();
+        });
+
+        function updateRangeValues() {
+            const tfRange = document.getElementById('tfCount');
+            const mcRange = document.getElementById('mcCount');
+            tfRange.max = questions.filter(q => q.type === 'tf').length;
+            mcRange.max = questions.filter(q => q.type === 'mc').length;
+        }
+
+        function updateValue(id, value) {
+            document.getElementById(id).innerText = value;
+        }
+
+        function shuffleQuestions() {
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+        }
+
+        function startExam() {
+            selectedTFCount = parseInt(document.getElementById('tfCount').value);
+            selectedMCCount = parseInt(document.getElementById('mcCount').value);
+            selectedQuestions = getSelectedQuestions();
+            userAnswers = new Array(selectedQuestions.length).fill(null);
+            document.getElementById('homeContainer').style.display = 'none';
+            document.getElementById('prevBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            document.getElementById('submitBtn').style.display = 'inline-block';
+            displayQuestion();
+        }
+
+        function getSelectedQuestions() {
+            const tfQuestions = questions.filter(q => q.type === 'tf').slice(0, selectedTFCount);
+            const mcQuestions = questions.filter(q => q.type === 'mc').slice(0, selectedMCCount);
+            return [...tfQuestions, ...mcQuestions];
+        }
+
+        function displayQuestion() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            const questionObj = selectedQuestions[currentQuestionIndex];
+            const questionElement = document.createElement('div');
+            questionElement.classList.add('question', 'active');
+            questionElement.innerHTML = `<p>Question ${currentQuestionIndex + 1}: ${questionObj.question}</p>`;
+
+            if (questionObj.type === 'tf') {
+                questionElement.innerHTML += `
+                    <label style="display:block;"><input type="radio" name="answer" value="T"> T</label>
+                    <label style="display:block;"><input type="radio" name="answer" value="F"> F</label>
+                `;
+            } else if (questionObj.type === 'mc') {
+                questionObj.options.forEach(option => {
+                    questionElement.innerHTML += `
+                        <label style="display:block;"><input type="radio" name="answer" value="${option}"> ${option}</label>
+                    `;
+                });
+            }
+            container.appendChild(questionElement);
+
+            if (userAnswers[currentQuestionIndex] !== null) {
+                const selectedOption = document.querySelector(`input[name="answer"][value="${userAnswers[currentQuestionIndex]}"]`);
+                if (selectedOption) selectedOption.checked = F;
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                saveAnswer();
+                currentQuestionIndex--;
+                displayQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < selectedQuestions.length - 1) {
+                saveAnswer();
+                currentQuestionIndex++;
+                displayQuestion();
+            }
+        }
+
+        function saveAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            if (selectedOption) {
+                userAnswers[currentQuestionIndex] = selectedOption.value;
+            }
+        }
+
+        function submitExam() {
+            saveAnswer();
+            let score = 0;
+            let correctAnswers = [];
+            selectedQuestions.forEach((question, index) => {
+                if (userAnswers[index] === question.answer) {
+                    score++;
+                } else {
+                    correctAnswers.push({ question: question.question, correctAnswer: question.answer, userAnswer: userAnswers[index] });
+                }
+            });
+
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `<div class="result">You scored ${score} out of ${selectedQuestions.length}</div>`;
+
+            if (score === selectedQuestions.length) {
+                resultContainer.innerHTML += '<div class="result">Congratulations! You got a perfect score!</div>';
+            } else {
+                correctAnswers.forEach(({ question, correctAnswer, userAnswer }) => {
+                    resultContainer.innerHTML += `
+                        <div class="result">
+                            <p>Question: ${question}</p>
+                            <p>Correct Answer: ${correctAnswer}</p>
+                            <p>Your Answer: ${userAnswer}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('prevBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('homeContainer').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
+
